@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#e9eff0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Odat Yo'li">
+<title>Odat Yo'li</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* Layout: one-column phone app. Sticky header, scrollable section tabs, content, floating add button. */
+:root{
+  --h:178;
+  --bg:#e9eff0; --surface:#f7fafa; --surface2:#dde7e8; --fg:#10272b; --muted:#566b6f; --line:#c5d4d6;
+  --accent:hsl(var(--h) 62% 30%); --accent-fg:#ffffff; --accent-soft:hsl(var(--h) 40% 86%);
+  --good:#1f7a4d; --warn:#a86a00; --bad:#b3372f;
+  --p-high:#b3372f; --p-mid:#a86a00; --p-low:#4d7a86;
+  --display:'Unbounded','Trebuchet MS',sans-serif; --body:'Golos Text','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1819; --surface:#162325; --surface2:#1d2f32; --fg:#e3eeef; --muted:#8aa2a6; --line:#2a4044;
+  --accent:hsl(var(--h) 58% 62%); --accent-fg:#06191b; --accent-soft:hsl(var(--h) 30% 20%);
+  --good:#58c78d; --warn:#e0a63b; --bad:#ee7b72; --p-high:#ee7b72; --p-mid:#e0a63b; --p-low:#7fb3c0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1819; --surface:#162325; --surface2:#1d2f32; --fg:#e3eeef; --muted:#8aa2a6; --line:#2a4044;
+  --accent:hsl(var(--h) 58% 62%); --accent-fg:#06191b; --accent-soft:hsl(var(--h) 30% 20%);
+  --good:#58c78d; --warn:#e0a63b; --bad:#ee7b72; --p-high:#ee7b72; --p-mid:#e0a63b; --p-low:#7fb3c0; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px;min-height:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-block:12px 4px}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brand h1{font-family:var(--display);font-size:19px;font-weight:600;margin:0;letter-spacing:-.01em}
+.brand h1 small{display:block;font-family:var(--body);font-size:12px;color:var(--muted);font-weight:400;letter-spacing:0;margin-top:2px}
+.icons{display:flex;gap:6px}
+.ib{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:15px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-block:10px 6px;scrollbar-width:none;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px))}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:1px solid var(--line);background:var(--surface);padding:8px 13px;border-radius:999px;font-size:13.5px;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+main{padding-top:8px;display:flex;flex-direction:column;gap:14px}
+h2{font-family:var(--display);font-size:15px;font-weight:600;margin:0}
+.muted{color:var(--muted);font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.row{display:flex;align-items:center;gap:10px;min-width:0}
+.sp{justify-content:space-between}
+.empty{text-align:center;color:var(--muted);padding:28px 12px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-weight:500}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+.btn.bad{color:var(--bad)}
+.btn.sm{padding:6px 10px;font-size:13px}
+.fab{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:18px;border:0;background:var(--accent);color:var(--accent-fg);font-size:28px;line-height:1;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:25}
+.tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--fg)}
+/* habit grid */
+.wk{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wk b{font-size:14px}
+.hgrid{overflow-x:auto}
+.hr{display:grid;grid-template-columns:minmax(120px,1fr) repeat(7,38px);align-items:center;gap:4px;padding-block:6px;border-top:1px solid var(--line);min-width:420px}
+.hr.hd{border-top:0;font-size:12px;color:var(--muted);text-align:center}
+.hr.hd .today{color:var(--accent);font-weight:700}
+.hn{display:flex;gap:8px;align-items:center;min-width:0;text-align:left;background:none;border:0;padding:0}
+.hn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.cell{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--line);background:var(--bg);display:grid;place-items:center;font-size:16px;padding:0}
+.cell[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.cell.td{border-color:var(--accent)}
+.streak{font-size:12px;color:var(--muted)}
+/* lists */
+.item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px}
+.chk{flex:none;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);display:grid;place-items:center;font-size:15px;padding:0;margin-top:1px}
+.chk[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:#fff}
+.item .body{flex:1;min-width:0}
+.item .t{font-weight:500;overflow-wrap:anywhere}
+.item.done .t{text-decoration:line-through;color:var(--muted)}
+.x{border:0;background:none;color:var(--muted);font-size:18px;padding:4px 6px}
+.bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+/* pomodoro */
+.clock{font-family:var(--display);font-size:46px;font-weight:600;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.seg{display:flex;gap:8px}
+.seg .btn{flex:1}
+.map{position:relative;height:30px;border-radius:8px;background:var(--surface2);overflow:hidden}
+.map i{position:absolute;top:0;bottom:0}
+.leg{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.leg b{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* inputs */
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+.in{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;color:var(--fg)}
+textarea.in{min-height:140px;resize:vertical}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 12px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+/* sheet */
+.veil{position:fixed;inset:0;background:rgba(5,15,17,.55);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:520px;background:var(--surface);border-radius:20px 20px 0 0;padding:18px max(16px,env(safe-area-inset-left,0px)) calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:90%;overflow-y:auto}
+.sheet h3{font-family:var(--display);font-size:16px;margin:0}
+.swatches{display:flex;gap:10px}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid var(--line)}
+.sw[aria-pressed="true"]{border-color:var(--fg)}
+.tasbih{width:150px;height:150px;border-radius:50%;border:0;margin:6px auto;background:var(--accent);color:var(--accent-fg);font-family:var(--display);font-size:42px;font-weight:600;display:grid;place-items:center;box-shadow:inset 0 0 0 8px rgba(255,255,255,.14)}
+.big{font-family:var(--display);font-size:24px;font-weight:600}
+@media (prefers-reduced-motion:no-preference){.cell,.chk,.tasbih{transition:transform .08s}.cell:active,.chk:active,.tasbih:active{transform:scale(.92)}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand">
+    <h1>Odat Yo'li<small id="sub"></small></h1>
+    <div class="icons">
+      <button class="ib" id="btnColor" aria-label="Rang">◐</button>
+      <button class="ib" id="btnTheme" aria-label="Mavzu">☾</button>
+    </div>
+  </div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+</div>
+<main id="view"></main>
+<button class="fab" id="fab" aria-label="Qo'shish">+</button>
+<div id="layer"></div>
+
+<script>
+(function(){
+var KEY='odat_yoli_v1';
+var $=function(s,r){return (r||document).querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function pad(n){return (n<10?'0':'')+n}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function parse(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+function addDays(d,n){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+var TODAY=function(){return ymd(new Date())};
+var MON=['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'];
+var DOW=['Ya','Du','Se','Ch','Pa','Ju','Sh'];
+var DOWL=['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+function fmtDate(s){var d=parse(s);return d.getDate()+' '+MON[d.getMonth()]}
+function fmtLong(s){var d=parse(s);return DOWL[d.getDay()]+', '+d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear()}
+
+var D={habits:[],tasks:[],goals:[],notes:[],journal:{},dhikr:[],prayers:{},qaza:null,study:[],
+  pomo:{cfg:{work:25,short:5,long:15,every:4,wake:'06:00',sleep:'23:00',auto:false,vib:true,sound:true},log:{},run:null,cycle:0},
+  ui:{tab:'odat',theme:'',hue:178,weekOff:0,taskDay:TODAY()}};
+function load(){try{var r=localStorage.getItem(KEY);if(r){var o=JSON.parse(r);for(var k in o){if(k==='pomo'){D.pomo.cfg=Object.assign(D.pomo.cfg,o.pomo.cfg||{});D.pomo.log=o.pomo.log||{};D.pomo.run=o.pomo.run||null;D.pomo.cycle=o.pomo.cycle||0}else if(k==='ui'){D.ui=Object.assign(D.ui,o.ui)}else D[k]=o[k]}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
+load();D.ui.taskDay=TODAY();D.ui.weekOff=0;
+
+var TABS=[['odat','Odatlar'],['vazifa','Vazifalar'],['maqsad','Maqsadlar'],['pomo','Pomodoro'],['stress','Kundalik'],['konspekt','Konspekt'],['islom','Musulmonlar'],['tib','Tibbiyot']];
+var PR={h:['Muhim','var(--p-high)',0],m:['O\'rtacha','var(--p-mid)',1],l:['Muhim emas','var(--p-low)',2]};
+
+function applyTheme(){
+  var r=document.documentElement;
+  if(D.ui.theme)r.setAttribute('data-theme',D.ui.theme);else r.removeAttribute('data-theme');
+  r.style.setProperty('--h',D.ui.hue);
+  var dark=D.ui.theme==='dark'||(!D.ui.theme&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  $('#btnTheme').textContent=dark?'☀':'☾';
+}
+
+/* sheet */
+function sheet(title,html,onSave,saveLabel){
+  var v=document.createElement('div');v.className='veil';
+  v.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>'+esc(title)+'</h3><div id="sb" style="display:flex;flex-direction:column;gap:12px">'+html+'</div><div class="row" style="justify-content:flex-end"><button class="btn" data-x>Yopish</button>'+(onSave?'<button class="btn pri" data-ok>'+(saveLabel||'Saqlash')+'</button>':'')+'</div></div>';
+  $('#layer').appendChild(v);
+  function close(){v.remove()}
+  v.addEventListener('click',function(e){if(e.target===v||e.target.hasAttribute('data-x'))close()});
+  var ok=$('[data-ok]',v);
+  if(ok)ok.addEventListener('click',function(){if(onSave($('#sb',v))!==false)close()});
+  var f=$('input,textarea',v);if(f&&f.type!=='date')setTimeout(function(){f.focus()},50);
+  return {el:v,close:close};
+}
+function chipsPick(root,name,def){
+  var cur=def;
+  root.querySelectorAll('[data-chip="'+name+'"] .chip').forEach(function(b){
+    b.setAttribute('aria-pressed',b.dataset.v===cur?'true':'false');
+    b.addEventListener('click',function(){cur=b.dataset.v;root.querySelectorAll('[data-chip="'+name+'"] .chip').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.v===cur?'true':'false')});root.dataset['c_'+name]=cur});
+  });
+  root.dataset['c_'+name]=cur;
+}
+function prioChips(){return '<div class="chips" data-chip="prio"><button class="chip" data-v="h">Muhim</button><button class="chip" data-v="m">O\'rtacha</button><button class="chip" data-v="l">Muhim emas</button></div>'}
+function sortPrio(a,b){return PR[a.prio||'m'][2]-PR[b.prio||'m'][2]}
+
+/* ===== ODATLAR ===== */
+function weekDays(){var base=addDays(new Date(),D.ui.weekOff*7);var dow=(base.getDay()+6)%7;var mon=addDays(base,-dow);var a=[];for(var i=0;i<7;i++)a.push(ymd(addDays(mon,i)));return a}
+function streak(h){var n=0,d=new Date();if(!h.done[ymd(d)])d=addDays(d,-1);while(h.done[ymd(d)]){n++;d=addDays(d,-1)}return n}
+function vOdat(){
+  var days=weekDays(),t=TODAY();
+  var hs=D.habits.filter(function(h){return !h.due||h.due>=t||streak(h)>0||true}).slice().sort(sortPrio);
+  var head='<div class="hr hd"><span></span>'+days.map(function(s){var d=parse(s);return '<span class="'+(s===t?'today':'')+'">'+DOW[d.getDay()]+'<br>'+d.getDate()+'</span>'}).join('')+'</div>';
+  var rows=hs.map(function(h){
+    return '<div class="hr"><button class="hn" data-edit="'+h.id+'"><i class="dot" style="background:'+PR[h.prio||'m'][1]+'"></i><span>'+esc(h.name)+'</span></button>'+
+      days.map(function(s){return '<button class="cell'+(s===t?' td':'')+'" data-h="'+h.id+'" data-d="'+s+'" aria-pressed="'+(h.done[s]?'true':'false')+'" aria-label="'+esc(h.name)+' '+s+'">'+(h.done[s]?'✓':'')+'</button>'}).join('')+'</div>';
+  }).join('');
+  var first=parse(days[0]),last=parse(days[6]);
+  var done=0,tot=0;hs.forEach(function(h){days.forEach(function(s){if(s<=t){tot++;if(h.done[s])done++}})});
+  var pct=tot?Math.round(done*100/tot):0;
+  return '<div class="card"><div class="wk"><button class="btn sm" data-wk="-1">‹</button><b>'+first.getDate()+' '+MON[first.getMonth()]+' – '+last.getDate()+' '+MON[last.getMonth()]+'</b><button class="btn sm" data-wk="1">›</button></div>'+
+    (D.ui.weekOff!==0?'<div class="row" style="justify-content:center;margin-top:8px"><button class="btn sm" data-wk="0">Bugun</button></div>':'')+
+    '<div class="row sp" style="margin-top:12px"><span class="muted">Shu haftada bajarilgan</span><b>'+pct+'%</b></div><div class="bar" style="margin-top:6px"><i style="width:'+pct+'%"></i></div></div>'+
+    (hs.length?'<div class="card hgrid">'+head+rows+'</div><div class="muted" style="text-align:center">Kataklarni bosib belgilang. Odat nomini bosib tahrirlang.</div>':'<div class="card empty">Hali odat yo\'q.<br>Pastdagi + tugmani bosing.</div>');
+}
+function bOdat(){
+  var v=$('#view');
+  v.querySelectorAll('[data-wk]').forEach(function(b){b.onclick=function(){var n=+b.dataset.wk;D.ui.weekOff=n===0?0:D.ui.weekOff+n;save();render()}});
+  v.querySelectorAll('.cell').forEach(function(b){b.onclick=function(){var h=D.habits.find(function(x){return x.id===b.dataset.h});if(h.done[b.dataset.d])delete h.done[b.dataset.d];else h.done[b.dataset.d]=1;save();render()}});
+  v.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){editHabit(D.habits.find(function(x){return x.id===b.dataset.edit}))}});
+}
+function editHabit(h){
+  var s=sheet(h?'Odatni tahrirlash':'Yangi odat',
+    '<label class="f">Nomi<input class="in" id="f1" value="'+esc(h?h.name:'')+'" placeholder="Masalan: 20 daqiqa kitob o\'qish"></label>'+
+    '<label class="f">Reja (daqiqa)<input class="in" id="f2" type="number" min="0" inputmode="numeric" value="'+(h&&h.plan||'')+'"></label>'+
+    '<label class="f">Muddat (ixtiyoriy)<input class="in" id="f3" type="date" value="'+(h&&h.due||'')+'"></label>'+
+    '<div class="muted">Ustuvorlik</div>'+prioChips()+
+    (h?'<button class="btn bad" id="fdel">Odatni o\'chirish</button>':''),
+    function(r){var n=$('#f1',r).value.trim();if(!n){$('#f1',r).focus();return false}
+      var o=h||{id:uid(),done:{}};o.name=n;o.plan=+$('#f2',r).value||0;o.due=$('#f3',r).value;o.prio=r.dataset.c_prio;
+      if(!h)D.habits.push(o);save();render()});
+  chipsPick($('#sb',s.el),'prio',h&&h.prio||'m');
+  var d=$('#fdel',s.el);if(d)d.onclick=function(){if(d.dataset.sure){D.habits=D.habits.filter(function(x){return x!==h});save();s.close();render()}else{d.dataset.sure=1;d.textContent='Ishonchingiz komilmi? Yana bosing'}};
+}
+
+/* ===== VAZIFALAR ===== */
+function vVazifa(){
+  var day=D.ui.taskDay,t=TODAY();
+  var list=D.tasks.filter(function(x){return x.date===day}).sort(function(a,b){return (a.done-b.done)||sortPrio(a,b)});
+  var over=day===t?D.tasks.filter(function(x){return x.date<t&&!x.done}):[];
+  var strip='';for(var i=-3;i<=10;i++){var s=ymd(addDays(new Date(),i)),d=parse(s);strip+='<button class="chip" data-day="'+s+'" aria-pressed="'+(s===day?'true':'false')+'" style="flex:none;text-align:center;min-width:48px">'+DOW[d.getDay()]+'<br><b>'+d.getDate()+'</b></button>'}
+  function item(x){return '<div class="card item'+(x.done?' done':'')+'"><button class="chk" data-tk="'+x.id+'" aria-pressed="'+(x.done?'true':'false')+'" aria-label="Bajarildi">'+(x.done?'✓':'')+'</button><div class="body"><div class="t">'+esc(x.name)+'</div><div class="muted"><i class="dot" style="display:inline-block;background:'+PR[x.prio||'m'][1]+';margin-right:6px"></i>'+PR[x.prio||'m'][0]+(x.date<t&&!x.done?' · '+fmtDate(x.date)+' dan':'')+'</div></div><button class="x" data-td="'+x.id+'" aria-label="O\'chirish">✕</button></div>'}
+  return '<div class="card"><div class="muted">'+fmtLong(day)+'</div><div style="display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:4px" id="strip">'+strip+'</div></div>'+
+    (over.length?'<h2>Bajarilmagan (oldingi kunlar)</h2>'+over.map(item).join(''):'')+
+    (list.length?list.map(item).join(''):'<div class="card empty">Bu kun uchun vazifa yo\'q.<br>Pastdagi + tugmani bosing.</div>');
+}
+function bVazifa(){
+  var v=$('#view');
+  v.querySelectorAll('[data-day]').forEach(function(b){b.onclick=function(){D.ui.taskDay=b.dataset.day;render()}});
+  v.querySelectorAll('[data-tk]').forEach(function(b){b.onclick=function(){var x=D.tasks.find(function(y){return y.id===b.dataset.tk});x.done=!x.done;save();render()}});
+  v.querySelectorAll('[data-td]').forEach(function(b){b.onclick=function(){D.tasks=D.tasks.filter(function(y){return y.id!==b.dataset.td});save();render()}});
+  var st=$('#strip');if(st){var a=st.querySelector('[aria-pressed="true"]');if(a)st.scrollLeft=a.offsetLeft-st.clientWidth/2}
+}
+function addTask(){
+  var s=sheet('Yangi vazifa','<label class="f">Vazifa<input class="in" id="f1" placeholder="Nima qilish kerak?"></label><label class="f">Sana<input class="in" id="f2" type="date" value="'+D.ui.taskDay+'"></label><div class="chips"><button class="chip" data-q="0">Bugun</button><button class="chip" data-q="1">Ertaga</button><button class="chip" data-q="3">+3 kun</button><button class="chip" data-q="7">+7 kun</button></div><div class="muted">Ustuvorlik</div>'+prioChips(),
+    function(r){var n=$('#f1',r).value.trim();if(!n)return false;D.tasks.push({id:uid(),name:n,date:$('#f2',r).value||TODAY(),prio:r.dataset.c_prio,done:false});D.ui.taskDay=$('#f2',r).value||TODAY();save();render()});
+  var r=$('#sb',s.el);chipsPick(r,'prio','m');
+  r.querySelectorAll('[data-q]').forEach(function(b){b.onclick=function(){$('#f2',r).value=ymd(addDays(new Date(),+b.dataset.q))}});
+}
+
+/* ===== MAQSADLAR ===== */
+function vMaqsad(){
+  var t=TODAY();
+  var gs=D.goals.slice().sort(function(a,b){return (a.done-b.done)||((a.due||'9')<(b.due||'9')?-1:1)});
+  if(!gs.length)return '<div class="card empty">Hali maqsad yozilmagan.<br>Pastdagi + tugmani bosing.</div>';
+  return gs.map(function(g){
+    var left=g.due?Math.ceil((parse(g.due)-parse(t))/864e5):null;
+    var info=g.due?(left<0?'<span style="color:var(--bad)">'+(-left)+' kun o\'tib ketdi</span>':left===0?'<b style="color:var(--warn)">Bugun oxirgi kun</b>':left+' kun qoldi · '+fmtDate(g.due)):'Muddatsiz';
+    var p=g.start&&g.due&&!g.done?Math.max(0,Math.min(100,Math.round((parse(t)-parse(g.start))/(parse(g.due)-parse(g.start)||1)*100))):(g.done?100:0);
+    return '<div class="card item'+(g.done?' done':'')+'"><button class="chk" data-gk="'+g.id+'" aria-pressed="'+(g.done?'true':'false')+'">'+(g.done?'✓':'')+'</button><div class="body"><div class="t">'+esc(g.name)+'</div><div class="muted">'+info+'</div>'+(g.due?'<div class="bar" style="margin-top:8px"><i style="width:'+p+'%"></i></div>':'')+'</div><button class="x" data-gd="'+g.id+'">✕</button></div>';
+  }).join('');
+}
+function bMaqsad(){
+  var v=$('#view');
+  v.querySelectorAll('[data-gk]').forEach(function(b){b.onclick=function(){var x=D.goals.find(function(y){return y.id===b.dataset.gk});x.done=!x.done;save();render()}});
+  v.querySelectorAll('[data-gd]').forEach(function(b){b.onclick=function(){D.goals=D.goals.filter(function(y){return y.id!==b.dataset.gd});save();render()}});
+}
+function addGoal(){
+  var s=sheet('Yangi maqsad','<label class="f">Maqsad<input class="in" id="f1" placeholder="Masalan: Step 1 imtihoniga tayyor bo\'lish"></label><label class="f">Muddat<input class="in" id="f2" type="date"></label><div class="chips"><button class="chip" data-q="30">+1 oy</button><button class="chip" data-q="90">+3 oy</button><button class="chip" data-q="y">Yil oxiri</button></div>',
+    function(r){var n=$('#f1',r).value.trim();if(!n)return false;D.goals.push({id:uid(),name:n,due:$('#f2',r).value,start:TODAY(),done:false});save();render()});
+  var r=$('#sb',s.el);r.querySelectorAll('[data-q]').forEach(function(b){b.onclick=function(){$('#f2',r).value=b.dataset.q==='y'?new Date().getFullYear()+'-12-31':ymd(addDays(new Date(),+b.dataset.q))}});
+}
+
+/* ===== POMODORO ===== */
+var TYPES={work:['Ish','var(--accent)'],short:['Tanaffus','var(--good)'],long:['Uzun tanaffus','var(--warn)']};
+function mins(hhmm){var p=hhmm.split(':');return +p[0]*60+ +p[1]}
+function fmtT(ms){var s=Math.max(0,Math.round(ms/1000));return pad(Math.floor(s/60))+':'+pad(s%60)}
+function logToday(){var t=TODAY();return D.pomo.log[t]||(D.pomo.log[t]=[])}
+function beep(){var c=D.pomo.cfg;try{if(c.vib&&navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
+  if(!c.sound)return;try{var A=window.AudioContext||window.webkitAudioContext;var a=new A(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=880;g.gain.value=.15;o.start();o.stop(a.currentTime+.4)}catch(e){}}
+function startRun(type,note){
+  var c=D.pomo.cfg,m=type==='work'?c.work:type==='short'?c.short:c.long;
+  D.pomo.run={type:type,start:Date.now(),dur:m*60000,note:note||''};save();render();
+}
+function finishRun(natural){
+  var r=D.pomo.run;if(!r)return;
+  var end=natural?r.start+r.dur:Date.now();
+  if(end-r.start>=30000)logToday().push({t:r.type,s:r.start,e:end,n:r.note});
+  D.pomo.run=null;
+  if(natural){beep();var c=D.pomo.cfg;
+    if(r.type==='work'){D.pomo.cycle++;var nx=(D.pomo.cycle%c.every===0)?'long':'short';if(c.auto)startRun(nx,'');}
+    else if(c.auto)startRun('work',r.note);
+  }
+  save();render();
+}
+function vPomo(){
+  var c=D.pomo.cfg,r=D.pomo.run,L=logToday();
+  var left=r?r.dur-(Date.now()-r.start):0;
+  var wk=0,br=0;L.forEach(function(x){var m=(x.e-x.s)/60000;if(x.t==='work')wk+=m;else br+=m});
+  var a=mins(c.wake),b=mins(c.sleep);if(b<=a)b+=1440;var span=b-a;
+  var d0=new Date();d0.setHours(0,0,0,0);var base=d0.getTime()+a*60000;
+  var segs=L.map(function(x){var l=(x.s-base)/60000/span*100,w=(x.e-x.s)/60000/span*100;l=Math.max(0,l);return '<i style="left:'+l+'%;width:'+Math.max(.6,w)+'%;background:'+TYPES[x.t][1]+'"></i>'}).join('');
+  var nowp=Math.max(0,Math.min(100,(Date.now()-base)/60000/span*100));
+  var ctrl=r?'<div class="clock" id="clk" style="color:'+TYPES[r.type][1]+'">'+fmtT(left)+'</div><div class="muted" style="text-align:center">'+TYPES[r.type][0]+(r.note?' · '+esc(r.note):'')+'</div><div class="bar"><i id="pbar" style="width:'+Math.min(100,(1-left/r.dur)*100)+'%"></i></div><div class="seg"><button class="btn" id="pStop">To\'xtatish</button><button class="btn pri" id="pSkip">'+(r.type==='work'?'Tanaffusga o\'tish':'Ishga qaytish')+'</button></div>'
+    :'<div class="clock" style="color:var(--muted)">'+pad(c.work)+':00</div><label class="f">Nima bilan shug\'ullanasiz?<input class="in" id="pnote" placeholder="Masalan: Farmakologiya"></label><div class="seg"><button class="btn pri" id="pWork">Ish</button><button class="btn" id="pShort">Tanaffus</button></div>';
+  var logs=L.slice().reverse().map(function(x){return '<div class="row sp" style="padding-block:6px;border-top:1px solid var(--line)"><span><i class="dot" style="display:inline-block;background:'+TYPES[x.t][1]+';margin-right:8px"></i>'+TYPES[x.t][0]+(x.n?' · '+esc(x.n):'')+'</span><span class="muted">'+new Date(x.s).toTimeString().slice(0,5)+' · '+Math.round((x.e-x.s)/60000)+' daq</span></div>'}).join('');
+  return '<div class="card" style="display:flex;flex-direction:column;gap:12px">'+ctrl+'</div>'+
+    '<div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row sp"><h2>Bugungi kun xaritasi</h2><span class="muted">'+Math.round(wk)+' daq ish · '+Math.round(br)+' daq dam</span></div><div class="map">'+segs+'<i style="left:'+nowp+'%;width:2px;background:var(--fg)"></i></div><div class="row sp muted"><span>'+c.wake+'</span><span>'+c.sleep+'</span></div><div class="leg"><span><b style="background:var(--accent)"></b>Ish</span><span><b style="background:var(--good)"></b>Dam</span><span><b style="background:var(--warn)"></b>Uzun dam</span></div>'+(L.length?logs:'<div class="muted" style="text-align:center">Hali yozuv yo\'q. Yuqoridagi tugmani bosib boshlang.</div>')+'</div>'+
+    '<div class="row" style="justify-content:space-between"><span class="muted">'+c.work+' daq ish · '+c.short+' daq tanaffus</span><button class="btn sm" id="pCfg">Sozlash</button></div>';
+}
+function bPomo(){
+  var g=function(id){return $(id)};
+  if(g('#pWork'))g('#pWork').onclick=function(){startRun('work',g('#pnote').value.trim())};
+  if(g('#pShort'))g('#pShort').onclick=function(){startRun('short','')};
+  if(g('#pStop'))g('#pStop').onclick=function(){finishRun(false)};
+  if(g('#pSkip'))g('#pSkip').onclick=function(){var r=D.pomo.run,n=r.note;if(r.type==='work'){finishRun(false);startRun('short','')}else{finishRun(false);startRun('work',n)}};
+  g('#pCfg').onclick=function(){
+    var c=D.pomo.cfg;
+    var s=sheet('Pomodoro sozlamalari','<div class="muted">Bu vaqtlar boshlang\'ich. Xohlasangiz istalgan payt o\'zgartiring.</div>'+
+      '<div class="row"><label class="f" style="flex:1">Uyg\'onaman<input class="in" id="c1" type="time" value="'+c.wake+'"></label><label class="f" style="flex:1">Uxlayman<input class="in" id="c2" type="time" value="'+c.sleep+'"></label></div>'+
+      '<div class="row"><label class="f" style="flex:1">Ish (daq)<input class="in" id="c3" type="number" inputmode="numeric" value="'+c.work+'"></label><label class="f" style="flex:1">Qisqa (daq)<input class="in" id="c4" type="number" inputmode="numeric" value="'+c.short+'"></label></div>'+
+      '<div class="row"><label class="f" style="flex:1">Uzun tanaffus (daq)<input class="in" id="c5" type="number" inputmode="numeric" value="'+c.long+'"></label><label class="f" style="flex:1">Har nechta ishdan keyin<input class="in" id="c6" type="number" inputmode="numeric" value="'+c.every+'"></label></div>'+
+      '<label class="row"><input type="checkbox" id="c7"'+(c.auto?' checked':'')+'> Tanaffus va keyingi ish o\'zi davom etsin</label>'+
+      '<label class="row"><input type="checkbox" id="c8"'+(c.sound?' checked':'')+'> Signal ovozi</label>'+
+      '<label class="row"><input type="checkbox" id="c9"'+(c.vib?' checked':'')+'> Qurilma tebransin</label>',
+      function(r){var n=function(id,d){var v=+$(id,r).value;return v>0?Math.round(v):d};
+        c.wake=$('#c1',r).value||c.wake;c.sleep=$('#c2',r).value||c.sleep;c.work=n('#c3',25);c.short=n('#c4',5);c.long=n('#c5',15);c.every=n('#c6',4);
+        c.auto=$('#c7',r).checked;c.sound=$('#c8',r).checked;c.vib=$('#c9',r).checked;save();render()});
+  };
+}
+var tickId=null;
+function tick(){
+  var r=D.pomo.run;if(!r||D.ui.tab!=='pomo')return;
+  var left=r.dur-(Date.now()-r.start);
+  if(left<=0){finishRun(true);return}
+  var e=$('#clk');if(e)e.textContent=fmtT(left);var b=$('#pbar');if(b)b.style.width=Math.min(100,(1-left/r.dur)*100)+'%';
+}
+setInterval(function(){var r=D.pomo.run;if(r&&r.dur-(Date.now()-r.start)<=0){finishRun(true)}else tick()},500);
+
+/* ===== KUNDALIK ===== */
+function words(s){return (s.trim().match(/\S+/g)||[]).length}
+function vStress(){
+  var t=TODAY(),txt=D.journal[t]||'';
+  var past=Object.keys(D.journal).filter(function(k){return k!==t&&D.journal[k].trim()}).sort().reverse().slice(0,14);
+  return '<div class="card" style="display:flex;flex-direction:column;gap:10px"><h2>Fikrlaringizni yozing</h2><p class="muted" style="margin:0">Har kuni his-tuyg\'ularingiz va fikrlaringizni yozib borish xayolda aylanib yurgan o\'yni tinchlantirishga yordam beradi. Bu yerni faqat siz ko\'rasiz. To\'g\'ri yoki noto\'g\'ri yozish degan narsa yo\'q.</p><div class="muted">'+fmtLong(t)+'</div><textarea class="in" id="jt" style="min-height:220px" placeholder="Bugun kun qanday o\'tdi? Nima xavotir qildirdi? Nimadan xursand bo\'ldingiz?">'+esc(txt)+'</textarea><div class="muted" id="jc">'+words(txt)+' / 3000 so\'z</div></div>'+
+    (past.length?'<h2>Oldingi yozuvlar</h2>'+past.map(function(k){return '<div class="card"><div class="muted">'+fmtLong(k)+'</div><div style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px">'+esc(D.journal[k].length>400?D.journal[k].slice(0,400)+'…':D.journal[k])+'</div></div>'}).join(''):'');
+}
+function bStress(){
+  var ta=$('#jt');ta.addEventListener('input',function(){
+    var w=words(ta.value);if(w>3000){ta.value=ta.value.split(/(\s+)/).slice(0,6000).join('')}
+    D.journal[TODAY()]=ta.value;save();$('#jc').textContent=Math.min(w,3000)+' / 3000 so\'z';
+  });
+}
+
+/* ===== KONSPEKT ===== */
+function vKons(){
+  var t=TODAY();
+  var due=D.notes.filter(function(n){return !n.done&&n.remind<=t});
+  var rest=D.notes.filter(function(n){return !(!n.done&&n.remind<=t)}).sort(function(a,b){return (a.done-b.done)||(a.remind<b.remind?-1:1)});
+  function card(n,hot){return '<div class="card item'+(n.done?' done':'')+'"><button class="chk" data-nk="'+n.id+'" aria-pressed="'+(n.done?'true':'false')+'" aria-label="Eslab qoldim">'+(n.done?'✓':'')+'</button><div class="body"><div class="t" style="white-space:pre-wrap">'+esc(n.text)+'</div><div class="muted">'+(hot?'<b style="color:var(--warn)">Bugun eslatiladi</b>':'Eslatma: '+fmtDate(n.remind))+'</div></div><button class="x" data-nd="'+n.id+'">✕</button></div>'}
+  return '<div class="card muted">Eshitgan foydali ma\'lumotingizni yozib qo\'ying. Eslatma kuni kelganda u shu yerda yuqorida chiqadi.</div>'+
+    (due.length?'<h2>Bugun takrorlang</h2>'+due.map(function(n){return card(n,true)}).join(''):'')+
+    (rest.length?'<h2>Hammasi</h2>'+rest.map(function(n){return card(n,false)}).join(''):(due.length?'':'<div class="card empty">Hali konspekt yo\'q.<br>Birinchi ma\'lumotni qo\'shing.</div>'));
+}
+function bKons(){
+  var v=$('#view');
+  v.querySelectorAll('[data-nk]').forEach(function(b){b.onclick=function(){var x=D.notes.find(function(y){return y.id===b.dataset.nk});x.done=!x.done;save();render()}});
+  v.querySelectorAll('[data-nd]').forEach(function(b){b.onclick=function(){D.notes=D.notes.filter(function(y){return y.id!==b.dataset.nd});save();render()}});
+}
+function addNote(){
+  var s=sheet('Konspektga qo\'shish','<label class="f">Ma\'lumot<textarea class="in" id="f1" placeholder="Nimani eslab qolmoqchisiz?"></textarea></label><div class="muted">Qachon eslatilsin?</div><div class="chips" data-chip="rem"><button class="chip" data-v="1">Ertaga</button><button class="chip" data-v="2">Indinga</button><button class="chip" data-v="7">1 hafta</button></div>',
+    function(r){var n=$('#f1',r).value.trim();if(!n)return false;D.notes.push({id:uid(),text:n,remind:ymd(addDays(new Date(),+r.dataset.c_rem)),done:false});save();render()});
+  chipsPick($('#sb',s.el),'rem','1');
+}
+
+/* ===== MUSULMONLAR ===== */
+var NAMOZ=['Bomdod','Peshin','Asr','Shom','Xufton'];
+function vIslom(){
+  var t=TODAY(),pr=D.prayers[t]||[];
+  var wk=[];for(var i=6;i>=0;i--)wk.push(ymd(addDays(new Date(),-i)));
+  var tot=0;wk.forEach(function(s){tot+=(D.prayers[s]||[]).length});
+  var q=D.qaza;
+  return '<div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row sp"><h2>Bugungi namozlar</h2><span class="muted">'+pr.length+' / 5</span></div><div class="chips">'+NAMOZ.map(function(n,i){return '<button class="chip" data-pr="'+i+'" aria-pressed="'+(pr.indexOf(i)>=0?'true':'false')+'" style="flex:1;text-align:center">'+n+'</button>'}).join('')+'</div>'+
+    '<div class="row" style="gap:4px;align-items:flex-end">'+wk.map(function(s){var n=(D.prayers[s]||[]).length;return '<div style="flex:1;text-align:center"><div style="height:44px;display:flex;align-items:flex-end"><div style="width:100%;height:'+Math.max(4,n*20)+'%;background:'+(n===5?'var(--good)':'var(--accent)')+';border-radius:5px;opacity:'+(n?1:.25)+'"></div></div><div class="muted" style="font-size:11px">'+DOW[parse(s).getDay()]+'</div></div>'}).join('')+'</div><div class="muted">Oxirgi 7 kunda '+tot+' / 35 namoz belgilandi</div></div>'+
+    '<div class="card" style="display:flex;flex-direction:column;gap:6px"><div class="row sp"><h2>Tasbeh</h2><button class="btn sm" id="zAdd">+ Zikr</button></div>'+
+    (D.dhikr.length?D.dhikr.map(function(z){var pc=z.target?Math.min(100,Math.round(z.count*100/z.target)):0;return '<div style="padding-block:10px;border-top:1px solid var(--line)"><div class="row sp"><b>'+esc(z.name)+'</b><button class="x" data-zd="'+z.id+'">✕</button></div><button class="tasbih" data-z="'+z.id+'" aria-label="'+esc(z.name)+' sanash">'+z.count+'</button>'+(z.target?'<div class="bar"><i style="width:'+pc+'%"></i></div><div class="muted" style="text-align:center;margin-top:4px">Maqsad: '+z.target+'</div>':'')+'<div style="text-align:center;margin-top:8px"><button class="btn sm" data-zr="'+z.id+'">Nolga qaytarish</button></div></div>'}).join(''):'<div class="muted" style="text-align:center;padding-block:10px">Hali zikr qo\'shilmagan.</div>')+'</div>'+
+    '<div class="card" style="display:flex;flex-direction:column;gap:10px"><h2>Qazo namozlarim</h2>'+
+    (q?'<div class="row sp"><span class="muted">Jami qazo (5 farz + vitr)</span><span class="big">'+Math.max(0,q.total-q.paid)+'</span></div><div class="bar"><i style="width:'+Math.round(q.paid*100/Math.max(1,q.total))+'%"></i></div><div class="muted">O\'qilgan: '+q.paid+' · Taxminan '+Math.ceil(Math.max(0,q.total-q.paid)/q.perDay)+' kunda tugaydi (kuniga '+q.perDay+' ta)</div><div class="row"><button class="btn pri" id="qPlus" style="flex:1">+1 kun o\'qidim</button><button class="btn" id="qMinus">−1</button></div><div class="row"><button class="btn sm" id="qEdit">Ma\'lumotlarni o\'zgartirish</button><button class="btn sm bad" id="qReset">Boshidan</button></div>'
+     :'<p class="muted" style="margin:0">Balog\'at yoshiga yetgan kundan beri qancha namoz qazo bo\'lganini taxminiy hisoblaydi.</p><button class="btn pri" id="qEdit">Hisoblash</button>')+'</div>';
+}
+function bIslom(){
+  var v=$('#view'),t=TODAY();
+  v.querySelectorAll('[data-pr]').forEach(function(b){b.onclick=function(){var a=D.prayers[t]||(D.prayers[t]=[]),i=+b.dataset.pr,k=a.indexOf(i);if(k>=0)a.splice(k,1);else a.push(i);save();render()}});
+  v.querySelectorAll('[data-z]').forEach(function(b){b.onclick=function(){var z=D.dhikr.find(function(y){return y.id===b.dataset.z});z.count++;if(z.target&&z.count===z.target){try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}}save();b.textContent=z.count}});
+  v.querySelectorAll('[data-zr]').forEach(function(b){b.onclick=function(){D.dhikr.find(function(y){return y.id===b.dataset.zr}).count=0;save();render()}});
+  v.querySelectorAll('[data-zd]').forEach(function(b){b.onclick=function(){D.dhikr=D.dhikr.filter(function(y){return y.id!==b.dataset.zd});save();render()}});
+  var za=$('#zAdd');if(za)za.onclick=addDhikr;
+  var qe=$('#qEdit');if(qe)qe.onclick=qazaForm;
+  var qp=$('#qPlus');if(qp)qp.onclick=function(){D.qaza.paid=Math.min(D.qaza.total,D.qaza.paid+6);save();render()};
+  var qm=$('#qMinus');if(qm)qm.onclick=function(){D.qaza.paid=Math.max(0,D.qaza.paid-6);save();render()};
+  var qr=$('#qReset');if(qr)qr.onclick=function(){if(qr.dataset.sure){D.qaza.paid=0;save();render()}else{qr.dataset.sure=1;qr.textContent='Yana bosing'}};
+}
+function addDhikr(){
+  sheet('Zikr qo\'shish','<label class="f">Nomi<input class="in" id="f1" placeholder="Masalan: Subhanalloh"></label><label class="f">Maqsad soni (ixtiyoriy)<input class="in" id="f2" type="number" inputmode="numeric" placeholder="33"></label>',
+    function(r){var n=$('#f1',r).value.trim();if(!n)return false;D.dhikr.push({id:uid(),name:n,count:0,target:+$('#f2',r).value||0});save();render()});
+}
+function qazaForm(){
+  var q=D.qaza||{};
+  var s=sheet('Qazo namozlarini hisoblash','<div class="muted">Jinsingiz</div><div class="chips" data-chip="g"><button class="chip" data-v="f">Ayol</button><button class="chip" data-v="m">Erkak</button></div>'+
+    '<label class="f">Balog\'atga yetgan sana (aniq bilsangiz)<input class="in" id="q1" type="date" value="'+(q.bal||'')+'"></label>'+
+    '<label class="f">Tug\'ilgan sana (aniq sanani bilmasangiz)<input class="in" id="q2" type="date" value="'+(q.birth||'')+'"></label>'+
+    '<label class="f">Doimiy namoz o\'qishni boshlagan sana<input class="in" id="q3" type="date" value="'+(q.begin||'')+'"></label>'+
+    '<div class="muted">Kuniga nechta qazo kuni o\'qiy olasiz? (1 kun = 6 namoz)</div><div class="chips" data-chip="p"><button class="chip" data-v="1">1</button><button class="chip" data-v="2">2</button><button class="chip" data-v="3">3</button></div>'+
+    '<div class="muted">Balog\'at sanasi kiritilmasa, tug\'ilgan sanadan ayol uchun 9, erkak uchun 12 yosh hisoblanadi. Natija taxminiy.</div>',
+    function(r){
+      var g=r.dataset.c_g,bal=$('#q1',r).value,bi=$('#q2',r).value,be=$('#q3',r).value;
+      if(!be)return false;
+      if(!bal){if(!bi)return false;var b=parse(bi);b.setFullYear(b.getFullYear()+(g==='f'?9:12));bal=ymd(b)}
+      var days=Math.max(0,Math.round((parse(be)-parse(bal))/864e5));
+      D.qaza={g:g,bal:$('#q1',r).value,birth:bi,begin:be,total:days*6,paid:q.paid||0,perDay:(+r.dataset.c_p||1)*6};save();render()});
+  var r=$('#sb',s.el);chipsPick(r,'g',q.g||'f');chipsPick(r,'p',q.perDay?String(q.perDay/6):'1');
+}
+
+/* ===== TIBBIYOT ===== */
+function vTib(){
+  var tot=D.study.reduce(function(a,s){return a+s.min},0);
+  return '<div class="card"><div class="row sp"><h2>O\'quv bo\'limlari</h2><span class="muted">Jami '+(tot/60).toFixed(1)+' soat</span></div><div class="muted" style="margin-top:4px">Har bir fan yoki mavzu uchun vaqtni qo\'shib boring.</div></div>'+
+   (D.study.length?D.study.map(function(s){var pc=s.target?Math.min(100,Math.round(s.min/60*100/s.target)):0;return '<div class="card" style="display:flex;flex-direction:column;gap:8px"><div class="row sp"><b>'+esc(s.name)+'</b><button class="x" data-sd="'+s.id+'">✕</button></div><div class="row sp"><span class="big">'+(s.min/60).toFixed(1)+' <span class="muted" style="font-size:13px;font-family:var(--body)">soat'+(s.target?' / '+s.target:'')+'</span></span></div>'+(s.target?'<div class="bar"><i style="width:'+pc+'%"></i></div>':'')+'<div class="chips"><button class="chip" data-sm="'+s.id+'" data-m="30">+30 daq</button><button class="chip" data-sm="'+s.id+'" data-m="60">+1 soat</button><button class="chip" data-sm="'+s.id+'" data-m="-30">−30 daq</button></div></div>'}).join(''):'<div class="card empty">Hali bo\'lim yo\'q.<br>Pastdagi + tugmani bosing.</div>');
+}
+function bTib(){
+  var v=$('#view');
+  v.querySelectorAll('[data-sm]').forEach(function(b){b.onclick=function(){var s=D.study.find(function(y){return y.id===b.dataset.sm});s.min=Math.max(0,s.min+ +b.dataset.m);save();render()}});
+  v.querySelectorAll('[data-sd]').forEach(function(b){b.onclick=function(){D.study=D.study.filter(function(y){return y.id!==b.dataset.sd});save();render()}});
+}
+function addStudy(){
+  sheet('Yangi bo\'lim','<label class="f">Fan yoki mavzu<input class="in" id="f1" placeholder="Masalan: Farmakologiya"></label><label class="f">Maqsad (soat, ixtiyoriy)<input class="in" id="f2" type="number" inputmode="numeric"></label>',
+    function(r){var n=$('#f1',r).value.trim();if(!n)return false;D.study.push({id:uid(),name:n,min:0,target:+$('#f2',r).value||0});save();render()});
+}
+
+/* ===== shell ===== */
+var VIEWS={odat:[vOdat,bOdat,function(){editHabit(null)}],vazifa:[vVazifa,bVazifa,addTask],maqsad:[vMaqsad,bMaqsad,addGoal],pomo:[vPomo,bPomo,null],stress:[vStress,bStress,null],konspekt:[vKons,bKons,addNote],islom:[vIslom,bIslom,null],tib:[vTib,bTib,addStudy]};
+function render(){
+  var tab=D.ui.tab,V=VIEWS[tab];
+  $('#tabs').innerHTML=TABS.map(function(t){return '<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(t[0]===tab?'true':'false')+'">'+t[1]+'</button>'}).join('');
+  $('#tabs').querySelectorAll('.tab').forEach(function(b){b.onclick=function(){D.ui.tab=b.dataset.t;save();render();window.scrollTo(0,0)}});
+  var d=new Date();$('#sub').textContent=DOWL[d.getDay()]+', '+d.getDate()+' '+MON[d.getMonth()];
+  var sc=window.scrollY;
+  $('#view').innerHTML=V[0]();V[1]();
+  $('#fab').hidden=!V[2];
+  $('#fab').onclick=V[2]||null;
+  window.scrollTo(0,sc);
+  var ta=$('#tabs .tab[aria-selected="true"]');if(ta&&ta.scrollIntoView&&!render.once){render.once=1;try{ta.scrollIntoView({inline:'center',block:'nearest'})}catch(e){}}
+}
+$('#btnTheme').onclick=function(){var dark=document.documentElement.getAttribute('data-theme')==='dark'||(!document.documentElement.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);D.ui.theme=dark?'light':'dark';save();applyTheme()};
+$('#btnColor').onclick=function(){
+  var hs=[178,215,265,330,18,140];
+  var s=sheet('Rang tanlang','<div class="swatches">'+hs.map(function(h){return '<button class="sw" data-hu="'+h+'" aria-pressed="'+(h===D.ui.hue?'true':'false')+'" style="background:hsl('+h+' 62% 38%)" aria-label="Rang"></button>'}).join('')+'</div>',null);
+  s.el.querySelectorAll('[data-hu]').forEach(function(b){b.onclick=function(){D.ui.hue=+b.dataset.hu;save();applyTheme();s.el.querySelectorAll('[data-hu]').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')})}});
+};
+applyTheme();render();
+})();
+</script>
+
+</body>
+</html>
